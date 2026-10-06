@@ -1,0 +1,35 @@
+version: "3.8"
+
+networks:
+  proxy-net:
+
+services:
+
+  app-one:
+    build:
+      context: ./app-one
+      dockerfile: Dockerfile
+    container_name: app-one
+    networks: [proxy-net]
+    restart: unless-stopped
+
+  app-two:
+    build:
+      context: ./app-two
+      dockerfile: Dockerfile
+    container_name: app-two
+    networks: [proxy-net]
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx-tls
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on: [app-one, app-two]
+    networks: [proxy-net]
+    restart: unless-stopped
